@@ -1,0 +1,3 @@
+[submodule "deps/webassembly-framework"]
+	path = deps/webassembly-framework
+	url = https://github.com/kbiElude/webassembly-framework
