@@ -32,6 +32,8 @@
 #include "imgui.h"
 #include "program.h"
 #include "shader.h"
+#include <chrono>
+#include <ctime>
 
 const char* g_fs_glsl = R"(#version 300 es
 
@@ -39,14 +41,18 @@ precision highp float;
 
 layout(location = 0) out vec4 result;
 
-uniform int width;
-uniform int height;
+uniform int   width;
+uniform int   height;
+uniform float t;
 
 void main()
 {
-    result = vec4(float(gl_FragCoord.x)                  / float(width  - 1),
-                  float(gl_FragCoord.y)                  / float(height - 1),
-                  float(gl_FragCoord.x + gl_FragCoord.y) / float(width + height - 2),
+    float cos_t_norm = cos(mod(t, 3.1415 * 2.0) ) * 0.5 + 0.5;
+    float sin_t_norm = sin(mod(t, 3.1415 * 2.0) ) * 0.5 + 0.5;
+
+    result = vec4( (0.2 + cos_t_norm * 0.8) * float(gl_FragCoord.x)                  / float(width  - 1),
+                   (0.3 + sin_t_norm * 0.7) * float(gl_FragCoord.y)                  / float(height - 1),
+                   (0.1 + cos_t_norm * 0.9) * float(gl_FragCoord.x + gl_FragCoord.y) / float(width + height - 2),
                   1.0);
 }
 )";
@@ -66,9 +72,12 @@ void main()
 
 ShaderUniquePtr  g_fs_ptr;
 GLint            g_program_height_uniform_location = -1;
+GLint            g_program_t_uniform_location      = -1;
 GLint            g_program_width_uniform_location  = -1;
 ProgramUniquePtr g_program_ptr;
 ShaderUniquePtr  g_vs_ptr;
+
+const auto g_start_time = std::chrono::system_clock::now();
 
 
 void imgui_callback()
@@ -90,6 +99,8 @@ void init_program()
 
     g_program_height_uniform_location = glGetUniformLocation(g_program_ptr->get_id(),
                                                              "height");
+    g_program_t_uniform_location      = glGetUniformLocation(g_program_ptr->get_id(),
+                                                             "t");
     g_program_width_uniform_location  = glGetUniformLocation(g_program_ptr->get_id(),
                                                              "width");
 
@@ -107,6 +118,10 @@ void render_callback(const int& in_width, const int& in_height)
         1.00f
     };
 
+    const auto current_time      = std::chrono::system_clock::now();
+    const auto elapsed_time_msec = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - g_start_time).count();
+    const auto t                 = static_cast<float>(elapsed_time_msec) / 1000.0f;
+
     if (g_program_ptr == nullptr)
     {
         init_program();
@@ -118,6 +133,8 @@ void render_callback(const int& in_width, const int& in_height)
                in_height);
 
     glUseProgram(g_program_ptr->get_id() );
+    glUniform1f (g_program_t_uniform_location,
+                 t);
     glUniform1i (g_program_height_uniform_location,
                  in_height);
     glUniform1i (g_program_width_uniform_location,
