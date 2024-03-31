@@ -89,13 +89,26 @@ void imgui_callback()
     ImGui::End();
 }
 
-void init_program()
+bool init_program()
 {
+    bool result = false;
+
     g_fs_ptr = Shader::create(ShaderStage::FRAGMENT, g_fs_glsl);
     g_vs_ptr = Shader::create(ShaderStage::VERTEX,   g_vs_glsl);
 
+    if (g_fs_ptr == nullptr ||
+        g_vs_ptr == nullptr)
+    {
+        goto end;
+    }
+
     g_program_ptr = Program::create(g_fs_ptr.get(),
                                     g_vs_ptr.get() );
+
+    if (g_program_ptr == nullptr)
+    {
+        goto end;
+    }
 
     g_program_height_uniform_location = glGetUniformLocation(g_program_ptr->get_id(),
                                                              "height");
@@ -106,6 +119,10 @@ void init_program()
 
     assert(g_program_height_uniform_location != -1);
     assert(g_program_width_uniform_location  != -1);
+
+    result = true;
+end:
+    return result;
 }
 
 void render_callback(const int& in_width, const int& in_height)
@@ -124,7 +141,10 @@ void render_callback(const int& in_width, const int& in_height)
 
     if (g_program_ptr == nullptr)
     {
-        init_program();
+        if (!init_program() )
+        {
+            goto end;
+        }
     }
 
     glViewport(0,
@@ -142,4 +162,7 @@ void render_callback(const int& in_width, const int& in_height)
     glDrawArrays(GL_TRIANGLE_STRIP,
                  0,  /* first */
                  4); /* count */
+
+end:
+    ;
 }
