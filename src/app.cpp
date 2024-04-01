@@ -28,10 +28,8 @@
  *
  * Aims to be used as a starting point for actual apps.
  */
-#include "framework.h"
+#include "app.h"
 #include "imgui.h"
-#include "program.h"
-#include "shader.h"
 #include <chrono>
 #include <ctime>
 
@@ -70,54 +68,25 @@ void main()
     }
 })";
 
-Framework::ShaderUniquePtr  g_fs_ptr;
-GLint                       g_program_height_uniform_location = -1;
-GLint                       g_program_t_uniform_location      = -1;
-GLint                       g_program_width_uniform_location  = -1;
-Framework::ProgramUniquePtr g_program_ptr;
-Framework::ShaderUniquePtr  g_vs_ptr;
-
 const auto g_start_time = std::chrono::system_clock::now();
 
 
-bool init_program()
+FrameworkAppUniquePtr create_app()
 {
-    bool result = false;
-
-    g_fs_ptr = Framework::Shader::create(Framework::ShaderStage::FRAGMENT, g_fs_glsl);
-    g_vs_ptr = Framework::Shader::create(Framework::ShaderStage::VERTEX,   g_vs_glsl);
-
-    if (g_fs_ptr == nullptr ||
-        g_vs_ptr == nullptr)
-    {
-        goto end;
-    }
-
-    g_program_ptr = Framework::Program::create(g_fs_ptr.get(),
-                                               g_vs_ptr.get() );
-
-    if (g_program_ptr == nullptr)
-    {
-        goto end;
-    }
-
-    g_program_height_uniform_location = glGetUniformLocation(g_program_ptr->get_id(),
-                                                             "height");
-    g_program_t_uniform_location      = glGetUniformLocation(g_program_ptr->get_id(),
-                                                             "t");
-    g_program_width_uniform_location  = glGetUniformLocation(g_program_ptr->get_id(),
-                                                             "width");
-
-    assert(g_program_height_uniform_location != -1);
-    assert(g_program_width_uniform_location  != -1);
-
-    result = true;
-end:
-    return result;
+    return App::create();
 }
 
+App::App()
+{
+    /* Stub */
+}
 
-void FrameworkApp::imgui_callback()
+App::~App()
+{
+    /* Stub */
+}
+
+void App::configure_imgui()
 {
     ImGui::Begin("Hello, world!");
     {
@@ -126,13 +95,56 @@ void FrameworkApp::imgui_callback()
     ImGui::End();
 }
 
-void FrameworkApp::on_file_dropped_callback(const std::string&   in_filename,
-                                            Uint8VectorUniquePtr in_data_u8_vec_ptr)
+FrameworkAppUniquePtr App::create()
+{
+    return FrameworkAppUniquePtr(new App() );
+}
+
+bool App::init_program()
+{
+    bool result = false;
+
+    m_fs_ptr = Framework::Shader::create(Framework::ShaderStage::FRAGMENT, g_fs_glsl);
+    m_vs_ptr = Framework::Shader::create(Framework::ShaderStage::VERTEX,   g_vs_glsl);
+
+    if (m_fs_ptr == nullptr ||
+        m_vs_ptr == nullptr)
+    {
+        goto end;
+    }
+
+    m_program_ptr = Framework::Program::create(m_fs_ptr.get(),
+                                               m_vs_ptr.get() );
+
+    if (m_program_ptr == nullptr)
+    {
+        goto end;
+    }
+
+    m_program_height_uniform_location = glGetUniformLocation(m_program_ptr->get_id(),
+                                                             "height");
+    m_program_t_uniform_location      = glGetUniformLocation(m_program_ptr->get_id(),
+                                                             "t");
+    m_program_width_uniform_location  = glGetUniformLocation(m_program_ptr->get_id(),
+                                                             "width");
+
+    assert(m_program_height_uniform_location != -1);
+    assert(m_program_width_uniform_location  != -1);
+
+    result = true;
+end:
+    return result;
+}
+
+
+void App::on_file_dropped_callback(const std::string&   in_filename,
+                                   Uint8VectorUniquePtr in_data_u8_vec_ptr)
 {
     Framework::report_error("File [" + in_filename + "] was dropped. Data size: " + std::to_string(in_data_u8_vec_ptr->size() ));
 }
 
-void FrameworkApp::render_callback(const int& in_width, const int& in_height)
+void App::render_frame(const int& in_width,
+                       const int& in_height)
 {
     static const float clear_color[4] =
     {
@@ -146,7 +158,7 @@ void FrameworkApp::render_callback(const int& in_width, const int& in_height)
     const auto elapsed_time_msec = std::chrono::duration_cast<std::chrono::milliseconds>(current_time - g_start_time).count();
     const auto t                 = static_cast<float>(elapsed_time_msec) / 1000.0f;
 
-    if (g_program_ptr == nullptr)
+    if (m_program_ptr == nullptr)
     {
         if (!init_program() )
         {
@@ -159,12 +171,12 @@ void FrameworkApp::render_callback(const int& in_width, const int& in_height)
                in_width,
                in_height);
 
-    glUseProgram(g_program_ptr->get_id() );
-    glUniform1f (g_program_t_uniform_location,
+    glUseProgram(m_program_ptr->get_id() );
+    glUniform1f (m_program_t_uniform_location,
                  t);
-    glUniform1i (g_program_height_uniform_location,
+    glUniform1i (m_program_height_uniform_location,
                  in_height);
-    glUniform1i (g_program_width_uniform_location,
+    glUniform1i (m_program_width_uniform_location,
                  in_width);
     glDrawArrays(GL_TRIANGLE_STRIP,
                  0,  /* first */
