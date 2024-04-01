@@ -126,6 +126,12 @@ void FrameworkApp::imgui_callback()
     ImGui::End();
 }
 
+void FrameworkApp::on_file_dropped_callback(const std::string&   in_filename,
+                                            Uint8VectorUniquePtr in_data_u8_vec_ptr)
+{
+    Framework::report_error("File [" + in_filename + "] was dropped. Data size: " + std::to_string(in_data_u8_vec_ptr->size() ));
+}
+
 void FrameworkApp::render_callback(const int& in_width, const int& in_height)
 {
     static const float clear_color[4] =
