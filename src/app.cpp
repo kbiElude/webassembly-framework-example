@@ -70,31 +70,22 @@ void main()
     }
 })";
 
-ShaderUniquePtr  g_fs_ptr;
-GLint            g_program_height_uniform_location = -1;
-GLint            g_program_t_uniform_location      = -1;
-GLint            g_program_width_uniform_location  = -1;
-ProgramUniquePtr g_program_ptr;
-ShaderUniquePtr  g_vs_ptr;
+Framework::ShaderUniquePtr  g_fs_ptr;
+GLint                       g_program_height_uniform_location = -1;
+GLint                       g_program_t_uniform_location      = -1;
+GLint                       g_program_width_uniform_location  = -1;
+Framework::ProgramUniquePtr g_program_ptr;
+Framework::ShaderUniquePtr  g_vs_ptr;
 
 const auto g_start_time = std::chrono::system_clock::now();
 
-
-void imgui_callback()
-{
-    ImGui::Begin("Hello, world!");
-    {
-        ImGui::Text("This is some useful text.");
-    }
-    ImGui::End();
-}
 
 bool init_program()
 {
     bool result = false;
 
-    g_fs_ptr = Shader::create(ShaderStage::FRAGMENT, g_fs_glsl);
-    g_vs_ptr = Shader::create(ShaderStage::VERTEX,   g_vs_glsl);
+    g_fs_ptr = Framework::Shader::create(Framework::ShaderStage::FRAGMENT, g_fs_glsl);
+    g_vs_ptr = Framework::Shader::create(Framework::ShaderStage::VERTEX,   g_vs_glsl);
 
     if (g_fs_ptr == nullptr ||
         g_vs_ptr == nullptr)
@@ -102,8 +93,8 @@ bool init_program()
         goto end;
     }
 
-    g_program_ptr = Program::create(g_fs_ptr.get(),
-                                    g_vs_ptr.get() );
+    g_program_ptr = Framework::Program::create(g_fs_ptr.get(),
+                                               g_vs_ptr.get() );
 
     if (g_program_ptr == nullptr)
     {
@@ -125,7 +116,17 @@ end:
     return result;
 }
 
-void render_callback(const int& in_width, const int& in_height)
+
+void FrameworkApp::imgui_callback()
+{
+    ImGui::Begin("Hello, world!");
+    {
+        ImGui::Text("This is some useful text.");
+    }
+    ImGui::End();
+}
+
+void FrameworkApp::render_callback(const int& in_width, const int& in_height)
 {
     static const float clear_color[4] =
     {
