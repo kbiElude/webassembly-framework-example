@@ -121,12 +121,9 @@ bool App::init_program()
         goto end;
     }
 
-    m_program_height_uniform_location = glGetUniformLocation(m_program_ptr->get_id(),
-                                                             "height");
-    m_program_t_uniform_location      = glGetUniformLocation(m_program_ptr->get_id(),
-                                                             "t");
-    m_program_width_uniform_location  = glGetUniformLocation(m_program_ptr->get_id(),
-                                                             "width");
+    m_program_height_uniform_location = m_program_ptr->get_uniform_location("height");
+    m_program_t_uniform_location      = m_program_ptr->get_uniform_location("t");
+    m_program_width_uniform_location  = m_program_ptr->get_uniform_location("width");
 
     assert(m_program_height_uniform_location != -1);
     assert(m_program_width_uniform_location  != -1);
